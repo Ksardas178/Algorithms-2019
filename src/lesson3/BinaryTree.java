@@ -35,12 +35,10 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
         Node<T> newNode = new Node<>(t);
         if (closest == null) {
             root = newNode;
-        }
-        else if (comparison < 0) {
+        } else if (comparison < 0) {
             assert closest.left == null;
             closest.left = newNode;
-        }
-        else {
+        } else {
             assert closest.right == null;
             closest.right = newNode;
         }
@@ -74,8 +72,50 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
      */
     @Override
     public boolean remove(Object o) {
-        // TODO
-        throw new NotImplementedError();
+        if (!contains(o)) return false;
+        @SuppressWarnings("unchecked")
+        T t = (T) o;
+        Node<T> toRemove = find(t);
+        Node<T> toReplace;
+        Node<T> ancestor = findAncestor(t);
+        if (height(toRemove.right) > height(toRemove.left)) {//Учитываем баланс
+            //По условию справа гарантированно будет хотя бы один элемент
+            toReplace = find(toRemove.right, t);//Ищем следующий за удаляемым элементом (у найденного нет левых потомков)
+            toReplace.left = toRemove.left;
+            replaceMatchingLink(ancestor, toReplace, t);
+        } else {//Левый больше правого
+            if (toRemove.left != null) {
+                toReplace = find(toRemove.left, t);//Ищем следующий за удаляемым элементом (у найденного нет правых потомков)
+                toReplace.right = toRemove.right;
+                replaceMatchingLink(ancestor, toReplace, t);
+            } else {//Оба узла нулевые
+                replaceMatchingLink(ancestor, null, t);
+            }
+        }
+        return true;
+    }
+
+    private void replaceMatchingLink(Node<T> oldNode, Node<T> newNode, T toCheck) {
+        //Гарантированно существует совпадающее содержимое
+        if (oldNode.left.value.compareTo(toCheck) == 0) oldNode.left = newNode;
+        else oldNode.right = newNode;
+    }
+
+    private Node<T> findAncestor(T t) {
+        //Элемент гарантированно есть!
+        Node<T> currentNode = root;
+        Node<T> prevNode = root;
+        int comparison = currentNode.value.compareTo(t);
+        while (comparison != 0) {
+            prevNode = currentNode;
+            if (comparison > 0) {
+                currentNode = currentNode.right;
+            } else {
+                currentNode = currentNode.left;
+            }
+            comparison = currentNode.value.compareTo(t);
+        }
+        return prevNode;
     }
 
     @Override
@@ -95,12 +135,10 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
         int comparison = value.compareTo(start.value);
         if (comparison == 0) {
             return start;
-        }
-        else if (comparison < 0) {
+        } else if (comparison < 0) {
             if (start.left == null) return start;
             return find(start.left, value);
-        }
-        else {
+        } else {
             if (start.right == null) return start;
             return find(start.right, value);
         }
