@@ -56,19 +56,30 @@ public class JavaDynamicTasks {
         if (s == 0) return Collections.emptyList();
         if (s == 1) return list;
         List<Integer> tinySeq = new LinkedList<>();
-        int l = 0;
-        for (int i = 0; i < s-1; i++) {
-            tinySeq.add(list.get(i));
+        List<Integer> lI = new LinkedList<>();
+        List<Integer> lJ = new LinkedList<>();
+        List<Integer> toAdd;
+        int maxLi = 0;
+        int maxLj = 0;
+        for (int i = 0; i < s - 1; i++) {
+            lI.add(list.get(i));
             for (int j = i + 1; j < s; j++) {
                 if (list.get(i) < list.get(j)) {
-                    tinySeq.addAll(longestIncreasingSubSequence(list.subList(j, s)));
-                    if (tinySeq.size() > l) {
-                        l = tinySeq.size();
+                    lJ = longestIncreasingSubSequence(list.subList(j, s));
+                    if (lJ.size() > maxLj) {
+                        maxLj = lJ.size();
+                        lI.addAll(lJ);
                     }
                 }
             }
+            if (lI.size() > maxLi) {
+                maxLi = lI.size();
+                tinySeq.clear();
+                tinySeq.addAll(lI);
+                lI.clear();
+            }
         }
-        return tinySeq;
+            return tinySeq;
     }
 
     /**
