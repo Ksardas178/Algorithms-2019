@@ -66,6 +66,18 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
         return 1 + Math.max(height(node.left), height(node.right));
     }
 
+    public void show() {
+        show(root);
+    }
+
+    private void show(Node<T> node) {
+        if (node != null) {
+            System.out.println(node.value);
+            if (node.right != null) show(node.right);
+            if (node.left != null) show(node.left);
+        }
+    }
+
     /**
      * Удаление элемента в дереве
      * Средняя
@@ -75,37 +87,80 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
         if (!contains(o)) return false;
         @SuppressWarnings("unchecked")
         T t = (T) o;
-        Node<T> toRemove = find(t);
-        Node<T> toReplace;
-        Node<T> ancestor = findAncestor(t);
-        if (height(toRemove.right) > height(toRemove.left)) {//Учитываем баланс
-            //По условию справа гарантированно будет хотя бы один элемент
-            toReplace = find(toRemove.right, t);//Ищем следующий за удаляемым элементом (у найденного нет левых потомков)
-            toReplace.left = toRemove.left;
-            replaceMatchingLink(ancestor, toReplace, t);
-        } else {//Левый больше правого
-            if (toRemove.left != null) {
-                toReplace = find(toRemove.left, t);//Ищем следующий за удаляемым элементом (у найденного нет правых потомков)
+        Node<T> toRemove = find(t);//Удаляемый элемент
+        Node<T> toReplace;//Заменяемый элемент
+        Node<T> temp;
+        if (toRemove == root) {//Отдельно случай замены корня
+            if (root.right == null && root.left == null) {//Нет потомков
+                root = null;
+            } else if (root.right == null) {//Нет правых потомков
+                toReplace = find(toRemove.left, t);//Ищем наименее отстоящий элемент слева на замену
+                toReplace.right = null;//Перепривязка
+                temp = toReplace;
+                while (temp.left != null) {//Определяем самый левый элемент относительно заменяющего
+                    temp = temp.left;
+                }
+                temp.left = root.left;//Перепривязка
+                removeCycleLink(toReplace);//Убираем циклическую ссылку
+                root = toReplace;//Перепривязка
+            } else {//Может не быть левых потомков
+                if (root.right.left == null) {
+                    toReplace = root.right;//Ищем наименее отстоящий элемент справа на замену
+                    toReplace.left = root.left;//Перепривязка
+                    root = toReplace;//Перепривязка
+                } else {
+                    toReplace = find(toRemove.right, t);//Ищем наименее отстоящий элемент справа на замену
+                    toReplace.left = root.left;//Перепривязка
+                    temp = toReplace;
+                    while (temp.right != null) {//Определяем самый правый элемент относительно заменяющего
+                        temp = temp.right;
+                    }
+                    temp.right = root.right;//Перепривязка
+                    removeCycleLink(toReplace);//Убираем циклическую ссылку
+
+                    root = toReplace;//Перепривязка
+                }
+            }//Случай удаления элемента из поддерева
+        } else {
+            temp = findAncestor(t);
+            if (toRemove.right == null & toRemove.left == null) {//Если потомков не имеется
+                if (temp.left != null && t.compareTo(temp.left.value) == 0)//Ищем подходящего потомка и удаляем
+                    temp.left = null;
+                else temp.right = null;
+            } else if (toRemove.right == null) {//Если нет потомков справа, но есть слева
+                if (temp.left.right == null){
+                    toReplace = toRemove.left;
+                    temp.left = toReplace;
+                } else
+                toReplace = find(toRemove.left, t);
+                toReplace.left = toRemove.left;
+                removeCycleLink(toReplace);//Убираем циклическую ссылку
+                temp.left = toReplace;
+            } else {//Может не быть левых потомков, но точно есть правые
+                toReplace = find(toRemove.right, t);
+                removeCycleLink(toReplace);//Убираем циклическую ссылку
                 toReplace.right = toRemove.right;
-                replaceMatchingLink(ancestor, toReplace, t);
-            } else {//Оба узла нулевые
-                replaceMatchingLink(ancestor, null, t);
+                if (temp.right != null && t.compareTo(temp.right.value) == 0)
+                    temp.right = toReplace;
+                else temp.left = toReplace;
             }
         }
+        size--;
         return true;
     }
 
-    private void replaceMatchingLink(Node<T> oldNode, Node<T> newNode, T toCheck) {
-        //Гарантированно существует совпадающее содержимое
-        if (oldNode.left.value.compareTo(toCheck) == 0) oldNode.left = newNode;
-        else oldNode.right = newNode;
+    private void removeCycleLink(Node<T> node){
+        Node<T> t = findAncestor(node.value);
+        if (t.right != null && node.value.compareTo(t.right.value) == 0)
+            t.right = null;
+        else t.left = null;
     }
 
     private Node<T> findAncestor(T t) {
         //Элемент гарантированно есть!
         Node<T> currentNode = root;
         Node<T> prevNode = root;
-        int comparison = currentNode.value.compareTo(t);
+        int comparison = t.compareTo(currentNode.value);
         while (comparison != 0) {
             prevNode = currentNode;
             if (comparison > 0) {
@@ -113,7 +168,7 @@ public class BinaryTree<T extends Comparable<T>> extends AbstractSet<T> implemen
             } else {
                 currentNode = currentNode.left;
             }
-            comparison = currentNode.value.compareTo(t);
+            comparison = t.compareTo(currentNode.value);
         }
         return prevNode;
     }

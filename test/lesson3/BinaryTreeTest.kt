@@ -55,16 +55,20 @@ class BinaryTreeTest {
         val random = Random()
         for (iteration in 1..100) {
             val list = mutableListOf<Int>()
-            for (i in 1..20) {
+            /*for (i in 1..4) {
                 list.add(random.nextInt(100))
-            }
+            }*/
+            list.add(10);
+            list.add(5);
+            list.add(4);
+            list.add(3);
             val binarySet = create()
             assertFalse(binarySet.remove(42))
             for (element in list) {
                 binarySet += element
             }
             val originalHeight = binarySet.height()
-            val toRemove = list[random.nextInt(list.size)]
+            val toRemove = 5//list[random.nextInt(list.size)]
             val oldSize = binarySet.size
             assertTrue(binarySet.remove(toRemove))
             assertEquals(oldSize - 1, binarySet.size)
