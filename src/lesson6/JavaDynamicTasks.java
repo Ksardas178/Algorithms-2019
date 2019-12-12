@@ -76,8 +76,8 @@ public class JavaDynamicTasks {
                 maxLi = lI.size();
                 tinySeq.clear();
                 tinySeq.addAll(lI);
-                lI.clear();
             }
+            lI.clear();
         }
             return tinySeq;
     }
